@@ -1,0 +1,32 @@
+repos:
+  # general checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+      - id: check-merge-conflict
+
+  - repo: local
+    hooks:
+      # Poetry - Dependency Management
+      - id: poetry-check
+        name: poetry-check
+        language: system
+        entry: bash -c 'cd backend && exec poetry check'
+        require_serial: true
+        files: ^backend/
+
+  # Python formatting
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+    - id: flake8
+
+  - repo: https://github.com/timothycrosley/isort
+    rev: 5.12.0
+    hooks:
+    - id: isort
