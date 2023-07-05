@@ -1,3 +1,6 @@
+[tool.black]
+line-length = 80
+
 [tool.poetry]
 name = "meal-plan backend"
 version = "0.1.0"
