@@ -45,6 +45,12 @@ class Ingredient(Base):
     name = Column(String, nullable=False)
     alias = Column(String)
 
+    meals = relationship(
+        "Meal",
+        secondary=MealIngredient,
+        back_populates="ingredients",
+    )
+
 
 class Meal(Base):
     __tablename__ = "meal"
