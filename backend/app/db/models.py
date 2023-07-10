@@ -23,6 +23,12 @@ class User(Base):
     is_superuser = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
 
+    diet_requirements = relationship(
+        "UserDietRequirements",
+        back_populates="user",
+        uselist=False,
+    )
+
 
 class UserDietRequirements(Base):
     __tablename__ = "user_diet_requirements"
@@ -36,6 +42,8 @@ class UserDietRequirements(Base):
     is_nut_free = Column(Boolean, default=False)
     is_shellfish_free = Column(Boolean, default=False)
     is_pescatarian = Column(Boolean, default=False)
+
+    user = relationship("User", back_populates="diet_requirements")
 
 
 class Ingredient(Base):
