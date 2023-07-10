@@ -27,6 +27,7 @@ class User(Base):
         "UserDietRequirements",
         back_populates="user",
         uselist=False,
+        cascade="all, delete-orphan",
     )
 
 
