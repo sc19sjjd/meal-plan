@@ -109,6 +109,7 @@ def test_user(test_db) -> models.User:
         email="fake@email.com",
         hashed_password=get_password_hash(),
         is_active=True,
+        is_verified=True,
     )
     test_db.add(user)
     test_db.commit()
@@ -125,6 +126,7 @@ def test_superuser(test_db) -> models.User:
         email="fakeadmin@email.com",
         hashed_password=get_password_hash(),
         is_superuser=True,
+        is_verified=True,
     )
     test_db.add(user)
     test_db.commit()

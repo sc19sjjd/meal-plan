@@ -10,6 +10,7 @@ def test_get_users(client, test_superuser, superuser_token_headers):
             "email": test_superuser.email,
             "is_active": test_superuser.is_active,
             "is_superuser": test_superuser.is_superuser,
+            "is_verified": test_superuser.is_verified,
         }
     ]
 
@@ -34,8 +35,8 @@ def test_edit_user(client, test_superuser, superuser_token_headers):
         "email": "newemail@email.com",
         "is_active": False,
         "is_superuser": True,
-        "first_name": "Joe",
-        "last_name": "Smith",
+        "is_verified": True,
+        "name": "Joe Smith",
         "password": "new_password",
     }
 
@@ -55,6 +56,7 @@ def test_edit_user_not_found(client, test_db, superuser_token_headers):
         "email": "newemail@email.com",
         "is_active": False,
         "is_superuser": False,
+        "is_verified": False,
         "password": "new_password",
     }
     response = client.put(
@@ -77,6 +79,7 @@ def test_get_user(
         "email": test_user.email,
         "is_active": bool(test_user.is_active),
         "is_superuser": test_user.is_superuser,
+        "is_verified": test_user.is_verified,
     }
 
 
