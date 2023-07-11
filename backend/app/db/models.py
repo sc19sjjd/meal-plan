@@ -30,6 +30,12 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    meals = relationship(
+        "Meal",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
 
 class UserDietRequirements(Base):
     __tablename__ = "user_diet_requirements"
@@ -74,3 +80,5 @@ class Meal(Base):
         secondary=MealIngredient,
         back_populates="meals",
     )
+
+    user = relationship("User", back_populates="meals")
