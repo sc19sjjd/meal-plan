@@ -37,6 +37,10 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+
+    # corresponding user's diet requirements (default to all false)
+    diet_requirements = schemas.UserDietRequirementsCreate()
+    create_user_diet_requirements(db, db_user.id, diet_requirements)
     return db_user
 
 
