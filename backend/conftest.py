@@ -1,5 +1,6 @@
 import typing as t
 
+import email_validator
 import pytest
 from app.core import config, security
 from app.db import models
@@ -9,6 +10,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
+
+email_validator.TEST_ENVIRONMENT = True
 
 
 def get_test_db_url() -> str:

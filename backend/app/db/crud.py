@@ -1,10 +1,19 @@
 import typing as t
 
 from app.core.security import get_password_hash
+from email_validator import EmailNotValidError, validate_email
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from . import models, schemas
+
+
+def check_valid_email(email: str) -> str:
+    try:
+        valid_email = validate_email(email)
+        return valid_email.normalized
+    except EmailNotValidError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 def get_user(db: Session, user_id: int) -> schemas.User:
@@ -26,6 +35,7 @@ def get_users(
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = get_password_hash(user.password)
+    user.email = check_valid_email(user.email)
     db_user = models.User(
         name=user.name,
         email=user.email,
@@ -64,6 +74,8 @@ def edit_user(
     if "password" in update_data:
         update_data["hashed_password"] = get_password_hash(user.password)
         del update_data["password"]
+    if "email" in update_data:
+        update_data["email"] = check_valid_email(user.email)
 
     for key, value in update_data.items():
         setattr(db_user, key, value)

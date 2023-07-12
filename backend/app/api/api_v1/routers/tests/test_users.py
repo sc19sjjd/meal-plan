@@ -30,7 +30,7 @@ def test_delete_user_not_found(client, superuser_token_headers):
     assert response.status_code == 404
 
 
-def test_edit_user(client, test_superuser, superuser_token_headers):
+def test_edit_user(client, test_user, superuser_token_headers):
     new_user = {
         "email": "newemail@email.com",
         "is_active": False,
@@ -41,17 +41,17 @@ def test_edit_user(client, test_superuser, superuser_token_headers):
     }
 
     response = client.put(
-        f"/api/v1/users/{test_superuser.id}",
+        f"/api/v1/users/{test_user.id}",
         json=new_user,
         headers=superuser_token_headers,
     )
     assert response.status_code == 200
-    new_user["id"] = test_superuser.id
+    new_user["id"] = test_user.id
     new_user.pop("password")
     assert response.json() == new_user
 
 
-def test_edit_user_not_found(client, test_db, superuser_token_headers):
+def test_edit_user_not_found(client, superuser_token_headers):
     new_user = {
         "email": "newemail@email.com",
         "is_active": False,
@@ -63,6 +63,18 @@ def test_edit_user_not_found(client, test_db, superuser_token_headers):
         "/api/v1/users/1234", json=new_user, headers=superuser_token_headers
     )
     assert response.status_code == 404
+
+
+def test_edit_user_invalid_email(client, test_user, superuser_token_headers):
+    new_user = {
+        "email": "newemail",
+    }
+    response = client.put(
+        f"/api/v1/users/{test_user.id}",
+        json=new_user,
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 400
 
 
 def test_edit_user_me(client, test_user, user_token_headers):

@@ -30,6 +30,7 @@ bcrypt = "^4.0.1"
 sqlalchemy-utils = "^0.41.1"
 python-multipart = "^0.0.6"
 pyjwt = "^2.7.0"
+email-validator = "^2.0.0.post2"
 
 
 [build-system]
