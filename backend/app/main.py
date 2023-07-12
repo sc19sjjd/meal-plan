@@ -2,6 +2,7 @@ import uvicorn
 from app import tasks
 from app.api.api_v1.routers.auth import auth_router
 from app.api.api_v1.routers.users import users_router
+from app.api.api_v1.routers.users_diet_requirements import users_diet_router
 from app.core import config
 from app.core.auth import get_current_active_user
 from app.core.celery_app import celery_app
@@ -42,6 +43,7 @@ app.include_router(
     dependencies=[Depends(get_current_active_user)],
 )
 app.include_router(auth_router, prefix="/api", tags=["auth"])
+app.include_router(users_diet_router, prefix="/api/v1", tags=["users_diet"])
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8888)

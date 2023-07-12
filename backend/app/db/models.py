@@ -17,11 +17,24 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
-    name = Column(String, nullable=False)
+    name = Column(String)
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
+
+    diet_requirements = relationship(
+        "UserDietRequirements",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+    meals = relationship(
+        "Meal",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
 
 
 class UserDietRequirements(Base):
@@ -37,6 +50,8 @@ class UserDietRequirements(Base):
     is_shellfish_free = Column(Boolean, default=False)
     is_pescatarian = Column(Boolean, default=False)
 
+    user = relationship("User", back_populates="diet_requirements")
+
 
 class Ingredient(Base):
     __tablename__ = "ingredient"
@@ -44,6 +59,12 @@ class Ingredient(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     alias = Column(String)
+
+    meals = relationship(
+        "Meal",
+        secondary=MealIngredient,
+        back_populates="ingredients",
+    )
 
 
 class Meal(Base):
@@ -59,3 +80,5 @@ class Meal(Base):
         secondary=MealIngredient,
         back_populates="meals",
     )
+
+    user = relationship("User", back_populates="meals")

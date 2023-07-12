@@ -32,7 +32,7 @@ async def users_list(
 @r.get("/users/me", response_model=User, response_model_exclude_none=True)
 async def user_me(current_user=Depends(get_current_active_user)):
     """
-    Get own user
+    Get current user
     """
     return current_user
 
@@ -42,14 +42,14 @@ async def user_me(current_user=Depends(get_current_active_user)):
     response_model=User,
     response_model_exclude_none=True,
 )
-async def user_details(
+async def user_by_id(
     request: Request,
     user_id: int,
     db=Depends(get_db),
     current_user=Depends(get_current_active_superuser),
 ):
     """
-    Get any user details
+    Get any user by id
     """
     user = get_user(db, user_id)
     return user
@@ -71,20 +71,35 @@ async def user_create(
     return create_user(db, user)
 
 
+@r.put("/users/me", response_model=User, response_model_exclude_none=True)
+async def user_edit_me(
+    request: Request,
+    user_edit: UserEdit,
+    db=Depends(get_db),
+    current_user=Depends(get_current_active_user),
+):
+    """
+    Update current user
+    """
+    user = edit_user(db, current_user.id, user_edit)
+    return user
+
+
 @r.put(
     "/users/{user_id}", response_model=User, response_model_exclude_none=True
 )
-async def user_edit(
+async def user_edit_by_id(
     request: Request,
     user_id: int,
-    user: UserEdit,
+    user_edit: UserEdit,
     db=Depends(get_db),
     current_user=Depends(get_current_active_superuser),
 ):
     """
-    Update existing user
+    Update existing user by id
     """
-    return edit_user(db, user_id, user)
+    user = edit_user(db, user_id, user_edit)
+    return user
 
 
 @r.delete(
