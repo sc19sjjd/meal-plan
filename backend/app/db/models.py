@@ -57,7 +57,7 @@ class Ingredient(Base):
     __tablename__ = "ingredient"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False, unique=True)
     alias = Column(String)
 
     meals = relationship(
