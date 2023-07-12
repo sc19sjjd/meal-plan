@@ -10,7 +10,7 @@ from . import models, schemas
 
 def check_valid_email(email: str) -> str:
     try:
-        valid_email = validate_email(email)
+        valid_email = validate_email(email, check_deliverability=True)
         return valid_email.normalized
     except EmailNotValidError as e:
         raise HTTPException(status_code=400, detail=str(e))

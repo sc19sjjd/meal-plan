@@ -32,7 +32,7 @@ def test_delete_user_not_found(client, superuser_token_headers):
 
 def test_edit_user(client, test_user, superuser_token_headers):
     new_user = {
-        "email": "newemail@email.com",
+        "email": "newemail@test.com",
         "is_active": False,
         "is_superuser": True,
         "is_verified": True,
@@ -53,7 +53,7 @@ def test_edit_user(client, test_user, superuser_token_headers):
 
 def test_edit_user_not_found(client, superuser_token_headers):
     new_user = {
-        "email": "newemail@email.com",
+        "email": "newemail@test.com",
         "is_active": False,
         "is_superuser": False,
         "is_verified": False,
@@ -67,7 +67,16 @@ def test_edit_user_not_found(client, superuser_token_headers):
 
 def test_edit_user_invalid_email(client, test_user, superuser_token_headers):
     new_user = {
-        "email": "newemail",
+        "email": "newemail.com",
+    }
+    response = client.put(
+        f"/api/v1/users/{test_user.id}",
+        json=new_user,
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 400
+    new_user = {
+        "email": "@test.com",
     }
     response = client.put(
         f"/api/v1/users/{test_user.id}",
@@ -79,7 +88,7 @@ def test_edit_user_invalid_email(client, test_user, superuser_token_headers):
 
 def test_edit_user_me(client, test_user, user_token_headers):
     new_user = {
-        "email": "newemail@email.com",
+        "email": "newemail@test.com",
         "is_active": False,
         "is_superuser": False,
         "is_verified": False,
