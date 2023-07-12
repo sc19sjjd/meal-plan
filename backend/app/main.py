@@ -1,6 +1,7 @@
 import uvicorn
 from app import tasks
 from app.api.api_v1.routers.auth import auth_router
+from app.api.api_v1.routers.ingredients import ingredients_router
 from app.api.api_v1.routers.users import users_router
 from app.api.api_v1.routers.users_diet_requirements import users_diet_router
 from app.core import config
@@ -36,14 +37,26 @@ async def example_task():
 
 
 # Routers
+app.include_router(auth_router, prefix="/api", tags=["auth"])
 app.include_router(
     users_router,
     prefix="/api/v1",
     tags=["users"],
     dependencies=[Depends(get_current_active_user)],
 )
-app.include_router(auth_router, prefix="/api", tags=["auth"])
-app.include_router(users_diet_router, prefix="/api/v1", tags=["users_diet"])
+app.include_router(
+    users_diet_router,
+    prefix="/api/v1",
+    tags=["users_diet"],
+    dependencies=[Depends(get_current_active_user)],
+)
+app.include_router(
+    ingredients_router,
+    prefix="/api/v1",
+    tags=["ingredients"],
+    dependencies=[Depends(get_current_active_user)],
+)
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8888)
