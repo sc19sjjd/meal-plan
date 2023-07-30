@@ -37,17 +37,11 @@ def test_db():
         autocommit=False, autoflush=False, bind=engine
     )
     test_session = test_session_maker()
-    test_session.begin_nested()
-
-    @event.listens_for(test_session, "after_transaction_end")
-    def restart_savepoint(s, transaction):
-        if transaction.nested and not transaction._parent.nested:
-            s.expire_all()
-            s.begin_nested()
 
     yield test_session
 
     # Roll back the parent transaction after the test is complete
+    test_session.rollback()
     test_session.close()
     trans.rollback()
     connection.close()
@@ -190,12 +184,8 @@ def test_ingredients(test_db) -> t.List[models.Ingredient]:
     Make 2 test ingredients in the database
     """
     ingredients = []
-    ingredients.append(
-        models.Ingredient(name="Test Ingredient")
-    )
-    ingredients.append(
-        models.Ingredient(name="Test Ingredient 2")
-    )
+    ingredients.append(models.Ingredient(name="Test Ingredient"))
+    ingredients.append(models.Ingredient(name="Test Ingredient 2"))
     test_db.add(ingredients[0])
     test_db.add(ingredients[1])
     test_db.commit()
