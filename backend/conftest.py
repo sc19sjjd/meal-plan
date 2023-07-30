@@ -182,3 +182,21 @@ def superuser_token_headers(
     a_token = tokens["access_token"]
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
+
+
+@pytest.fixture
+def test_ingredients(test_db) -> t.List[models.Ingredient]:
+    """
+    Make 2 test ingredients in the database
+    """
+    ingredients = []
+    ingredients.append(
+        models.Ingredient(name="Test Ingredient")
+    )
+    ingredients.append(
+        models.Ingredient(name="Test Ingredient 2")
+    )
+    test_db.add(ingredients[0])
+    test_db.add(ingredients[1])
+    test_db.commit()
+    return ingredients

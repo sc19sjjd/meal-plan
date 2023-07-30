@@ -8,7 +8,7 @@ def test_get_user_diet_requirements(
         f"/api/v1/users_diet_requirements/{test_user.id}",
         headers=superuser_token_headers,
     )
-    assert response.status_code == 200  #
+    assert response.status_code == 200
     db_diet_requirements = (
         test_db.query(models.UserDietRequirements)
         .filter(models.UserDietRequirements.user_id == test_user.id)
@@ -42,7 +42,7 @@ def test_get_user_diet_requirements_me(
         "/api/v1/users_diet_requirements/me",
         headers=user_token_headers,
     )
-    assert response.status_code == 200  #
+    assert response.status_code == 200
     db_diet_requirements = (
         test_db.query(models.UserDietRequirements)
         .filter(models.UserDietRequirements.user_id == test_user.id)

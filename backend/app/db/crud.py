@@ -34,6 +34,12 @@ def get_users(
 
 
 def create_user(db: Session, user: schemas.UserCreate):
+    if get_user_by_email(db, user.email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
+
     hashed_password = get_password_hash(user.password)
     user.email = check_valid_email(user.email)
     db_user = models.User(
@@ -75,6 +81,11 @@ def edit_user(
         update_data["hashed_password"] = get_password_hash(user.password)
         del update_data["password"]
     if "email" in update_data:
+        if get_user_by_email(db, user.email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
+            )
         update_data["email"] = check_valid_email(user.email)
 
     for key, value in update_data.items():
@@ -171,9 +182,25 @@ def get_ingredients(
     return db.query(models.Ingredient).offset(skip).limit(limit).all()
 
 
+def get_ingredients_like_name(db: Session, name: str, skip: int = 0, limit: int = 100) -> t.List[schemas.Ingredient]:
+    return (
+        db.query(models.Ingredient)
+        .filter(models.Ingredient.name.like(f"%{name}%"))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
 def create_ingredient(
     db: Session, ingredient: schemas.IngredientCreate
 ) -> schemas.Ingredient:
+    if get_ingredient_by_name(db, ingredient.name):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail="Ingredient with this name already exists",
+        )
+
     db_ingredient = models.Ingredient(
         name=ingredient.name,
         alias=ingredient.alias,
@@ -204,6 +231,12 @@ def edit_ingredient(
             status.HTTP_404_NOT_FOUND, detail="Ingredient not found"
         )
     update_data = ingredient.dict(exclude_unset=True)
+
+    if "name" in update_data and get_ingredient_by_name(db, ingredient.name):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail="Ingredient with this name already exists",
+        )
 
     for key, value in update_data.items():
         setattr(db_ingredient, key, value)

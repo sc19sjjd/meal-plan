@@ -3,28 +3,32 @@ import typing as t
 from app.core import security
 from app.core.auth import get_current_active_superuser, get_current_active_user
 from app.db.crud import (create_ingredient, delete_ingredient, edit_ingredient,
-                         get_ingredient, get_ingredients)
-from app.db.schemas import Ingredient, IngredientCreate, IngredientEdit
+                         get_ingredient, get_ingredients, get_ingredients_like_name)
+from app.db.schemas import Ingredient, IngredientCreate, IngredientEdit, IngredientOut
 from app.db.session import get_db
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Request, Response, Query
 
 ingredients_router = r = APIRouter()
 
 
 @r.get(
     "/ingredients",
-    response_model=t.List[Ingredient],
+    response_model=t.List[IngredientOut],
     response_model_exclude_none=True,
 )
 async def ingredients_list(
     response: Response,
     db=Depends(get_db),
-    current_user=Depends(get_current_active_superuser),
+    current_user=Depends(get_current_active_user),
+    name: t.Annotated[str | None,  Query(max_length=50)] = None,
 ):
     """
     Get all ingredients
     """
-    ingredients = get_ingredients(db)
+    if name:
+        ingredients = get_ingredients_like_name(db, name)
+    else:
+        ingredients = get_ingredients(db)
     # This is necessary for react-admin to work
     response.headers["Content-Range"] = f"0-9/{len(ingredients)}"
     return ingredients
