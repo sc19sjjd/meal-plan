@@ -3,7 +3,7 @@ Meal planning service leveraging ChatGPT API
 
 ## Features
 
-- **FastAPI** with Python 3.8
+- **FastAPI** with Python 3.11
 - **React 16** with Typescript, Redux, and react-router
 - Postgres
 - SqlAlchemy with Alembic for migrations
