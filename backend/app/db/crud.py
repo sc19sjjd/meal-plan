@@ -36,7 +36,7 @@ def get_users(
 def create_user(db: Session, user: schemas.UserCreate):
     if get_user_by_email(db, user.email):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="Email already registered",
         )
 
@@ -83,7 +83,7 @@ def edit_user(
     if "email" in update_data:
         if get_user_by_email(db, user.email):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_409_CONFLICT,
                 detail="Email already registered",
             )
         update_data["email"] = check_valid_email(user.email)
