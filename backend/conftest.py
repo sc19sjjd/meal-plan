@@ -25,26 +25,72 @@ def test_db():
     This is to avoid tests affecting the database state of other tests.
     """
     # Connect to the test database
-    engine = create_engine(
-        get_test_db_url(),
+    test_engine = create_engine(
+        get_test_db_url(), 
+        # connect_args={"check_same_thread": False}
     )
 
-    connection = engine.connect()
-    trans = connection.begin()
+    Base.metadata.create_all(bind=test_engine)
+    session_factory = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+    SessionLocal = session_factory
+    session = SessionLocal()
+    
+    yield session  # this is where the test function will execute
 
-    # Run a parent transaction that can roll back all changes
-    test_session_maker = sessionmaker(
-        autocommit=False, autoflush=False, bind=engine
-    )
-    test_session = test_session_maker()
+    # Teardown: rollback any changes made during the test and close the session
+    session.rollback()
+    session.close()
+    Base.metadata.drop_all(bind=test_engine)
 
-    yield test_session
 
-    # Roll back the parent transaction after the test is complete
-    test_session.rollback()
-    test_session.close()
-    trans.rollback()
-    connection.close()
+# @pytest.fixture()
+# def test_db():
+#     """
+#     Modify the db session to automatically roll back after each test.
+#     This is to avoid tests affecting the database state of other tests.
+#     """
+#     # Connect to the test database
+#     engine = create_engine(
+#         get_test_db_url(),
+#         echo=True,
+#     )
+
+#     connection = engine.connect()
+#     trans = connection.begin()
+
+#     # Run a parent transaction that can roll back all changes
+#     test_session_maker = sessionmaker(
+#         autocommit=False, autoflush=False, bind=engine
+#     )
+#     test_session = test_session_maker()
+#     savepoint = test_session.begin_nested()
+#     test_session.expire_all()
+#     # print("begin nested")
+
+#     @event.listens_for(test_session, "after_transaction_end")
+#     def restart_savepoint(s, transaction):
+#         if transaction.nested and not transaction._parent.nested:
+#             s.expire_all()
+#             s.begin_nested()
+#             # print("new transaction")
+
+#     # print(test_session._nested_transaction)
+#     # print("before yield")
+
+#     yield test_session
+
+#     print("rollback")
+#     # print(test_session._nested_transaction)
+#     # print("before rollback")
+#     # Roll back the parent transaction after the test is complete
+#     #savepoint.rollback()
+#     test_session.rollback()
+#     test_session.close()
+#     trans.rollback()
+#     trans.close()
+#     connection.close()
+#     # print(test_session._nested_transaction)
+#     # print("after rollback")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -102,6 +148,11 @@ def test_user(test_db) -> models.User:
     Make a test user in the database
     """
 
+    # print(test_db._nested_transaction)
+    # print("before user")
+
+    #savepoint = test_db.begin_nested()
+
     user = models.User(
         email="fake@email.com",
         hashed_password=get_password_hash(),
@@ -109,13 +160,19 @@ def test_user(test_db) -> models.User:
         is_verified=True,
     )
     test_db.add(user)
-    test_db.commit()
     user_diet_requirements = models.UserDietRequirements(
         user_id=user.id,
     )
     test_db.add(user_diet_requirements)
+    # print("before commit")
     test_db.commit()
+    # print("after commit")
+
+    # print(test_db._nested_transaction)
+    # print("after user")
+
     return user
+    #savepoint.rollback()
 
 
 @pytest.fixture
@@ -123,6 +180,7 @@ def test_superuser(test_db) -> models.User:
     """
     Superuser for testing
     """
+    # savepoint = test_db.begin_nested()
 
     user = models.User(
         email="fakeadmin@email.com",
@@ -131,13 +189,16 @@ def test_superuser(test_db) -> models.User:
         is_verified=True,
     )
     test_db.add(user)
-    test_db.commit()
+    #test_db.commit()
     user_diet_requirements = models.UserDietRequirements(
         user_id=user.id,
     )
     test_db.add(user_diet_requirements)
     test_db.commit()
+    
     return user
+
+    # savepoint.rollback()
 
 
 def verify_password_mock(first: str, second: str) -> bool:
@@ -184,8 +245,12 @@ def test_ingredients(test_db) -> t.List[models.Ingredient]:
     Make 2 test ingredients in the database
     """
     ingredients = []
-    ingredients.append(models.Ingredient(name="Test Ingredient"))
-    ingredients.append(models.Ingredient(name="Test Ingredient 2"))
+    ingredients.append(
+        models.Ingredient(name="Test Ingredient")
+    )
+    ingredients.append(
+        models.Ingredient(name="Test Ingredient 2")
+    )
     test_db.add(ingredients[0])
     test_db.add(ingredients[1])
     test_db.commit()
