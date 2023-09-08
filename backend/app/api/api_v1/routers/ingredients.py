@@ -3,7 +3,7 @@ import typing as t
 from app.core import security
 from app.core.auth import get_current_active_superuser, get_current_active_user
 from app.db.crud import (create_ingredient, delete_ingredient, edit_ingredient,
-                         get_ingredient, get_ingredients,
+                         get_all_ingredients, get_ingredient,
                          get_ingredients_like_name, object_as_dict)
 from app.db.schemas import (Ingredient, IngredientCreate, IngredientEdit,
                             IngredientOut)
@@ -30,9 +30,9 @@ async def ingredients_list(
     if name:
         ingredients = get_ingredients_like_name(db, name)
     else:
-        ingredients = get_ingredients(db)
+        ingredients = get_all_ingredients(db)
 
-    # prevent errors from converting orm to ingredientout
+    # prevent errors from converting orm to ingredient schema
     ingredients = [object_as_dict(ingredient) for ingredient in ingredients]
 
     # This is necessary for react-admin to work

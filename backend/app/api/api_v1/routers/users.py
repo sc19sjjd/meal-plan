@@ -1,8 +1,8 @@
 import typing as t
 
 from app.core.auth import get_current_active_superuser, get_current_active_user
-from app.db.crud import (create_user, delete_user, edit_user, get_user,
-                         get_users)
+from app.db.crud import (create_user, delete_user, edit_user, get_all_users,
+                         get_user)
 from app.db.schemas import User, UserCreate, UserEdit, UserOut
 from app.db.session import get_db
 from fastapi import APIRouter, Depends, Request, Response, encoders
@@ -23,7 +23,7 @@ async def users_list(
     """
     Get all users
     """
-    users = get_users(db)
+    users = get_all_users(db)
     # This is necessary for react-admin to work
     response.headers["Content-Range"] = f"0-9/{len(users)}"
     return users

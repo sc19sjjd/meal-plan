@@ -2,6 +2,7 @@ import uvicorn
 from app import tasks
 from app.api.api_v1.routers.auth import auth_router
 from app.api.api_v1.routers.ingredients import ingredients_router
+from app.api.api_v1.routers.meals import meals_router
 from app.api.api_v1.routers.users import users_router
 from app.api.api_v1.routers.users_diet_requirements import users_diet_router
 from app.core import config
@@ -54,6 +55,12 @@ app.include_router(
     ingredients_router,
     prefix="/api/v1",
     tags=["ingredients"],
+    dependencies=[Depends(get_current_active_user)],
+)
+app.include_router(
+    meals_router,
+    prefix="/api/v1",
+    tags=["meals"],
     dependencies=[Depends(get_current_active_user)],
 )
 

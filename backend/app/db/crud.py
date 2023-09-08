@@ -34,7 +34,7 @@ def get_user_by_email(db: Session, email: str) -> schemas.User:
     return db.query(models.User).filter(models.User.email == email).first()
 
 
-def get_users(
+def get_all_users(
     db: Session, skip: int = 0, limit: int = 100
 ) -> t.List[schemas.User]:
     return db.query(models.User).offset(skip).limit(limit).all()
@@ -58,6 +58,7 @@ def create_user(db: Session, user: schemas.UserCreate):
         hashed_password=hashed_password,
     )
     db.add(db_user)
+    db.commit()
 
     # corresponding user's diet requirements (default to all false)
     diet_requirements = schemas.UserDietRequirementsCreate()
@@ -117,19 +118,6 @@ def get_user_diet_requirements(
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")
 
     return db_user.diet_requirements
-
-
-# def get_user_diet_requirements(
-#     db: Session, user_id: int
-# ) -> schemas.UserDietRequirements:
-#     print(f"Fetching diet requirements for user_id: {user_id}")
-#     try:
-#         result = db.query(models.UserDietRequirements).filter(models.UserDietRequirements.user_id == user_id).first()
-#         print(f"Query result: {result}")
-#         return result
-#     except Exception as e:
-#         print(f"Error occurred: {e}")
-#         return None
 
 
 def create_user_diet_requirements(
@@ -201,7 +189,7 @@ def get_ingredient_by_name(db: Session, name: str) -> schemas.Ingredient:
     )
 
 
-def get_ingredients(
+def get_all_ingredients(
     db: Session, skip: int = 0, limit: int = 100
 ) -> t.List[schemas.Ingredient]:
     return db.query(models.Ingredient).offset(skip).limit(limit).all()
@@ -281,18 +269,56 @@ def get_meal(db: Session, meal_id: int) -> schemas.Meal:
     return meal
 
 
-def get_meals(
-    db: Session, skip: int = 0, limit: int = 100
+def get_all_meals(
+    db: Session, user_id: int = None, skip: int = 0, limit: int = 100
 ) -> t.List[schemas.Meal]:
-    return db.query(models.Meal).offset(skip).limit(limit).all()
+    if user_id:
+        return (
+            db.query(models.Meal)
+            .join(models.User)
+            .filter(models.User.id == user_id)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+    else:
+        return db.query(models.Meal).offset(skip).limit(limit).all()
 
 
-def create_meal(db: Session, meal: schemas.MealCreate) -> schemas.Meal:
+def get_meals_like_name(
+    db: Session, name: str, user_id: int = None, skip: int = 0, limit: int = 100
+) -> t.List[schemas.Meal]:
+    if user_id:
+        return (
+            db.query(models.Meal)
+            .join(models.User)
+            .filter(models.User.id == user_id)
+            .filter(models.Meal.name.like(f"%{name}%"))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+    else:
+        return (
+            db.query(models.Meal)
+            .filter(models.Meal.name.like(f"%{name}%"))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
+
+def create_meal(
+    db: Session, meal: schemas.MealCreate, user_id: int
+) -> schemas.Meal:
+    db_user = get_user(db, user_id)
+
     db_meal = models.Meal(
         name=meal.name,
         description=meal.description,
     )
     db.add(db_meal)
+    db_user.meals.append(db_meal)
     db.commit()
 
     for ingredient_id in meal.ingredients:
@@ -305,22 +331,35 @@ def create_meal(db: Session, meal: schemas.MealCreate) -> schemas.Meal:
     return db_meal
 
 
-def delete_meal(db: Session, meal_id: int) -> schemas.Meal:
+def delete_meal(db: Session, meal_id: int, user_id: int) -> schemas.Meal:
     meal = get_meal(db, meal_id)
     if not meal:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Meal not found")
+
+    if user_id != meal.user_id and meal.user.is_superuser is False:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            detail="You are not authorized to delete this meal",
+        )
+
     db.delete(meal)
     db.commit()
     return meal
 
 
 def edit_meal(
-    db: Session, meal_id: int, meal: schemas.MealEdit
+    db: Session, meal_id: int, meal: schemas.MealEdit, user_id: int
 ) -> schemas.Meal:
     db_meal = get_meal(db, meal_id)
     if not db_meal:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Meal not found")
     update_data = meal.dict(exclude_unset=True)
+
+    if user_id != db_meal.user_id and db_meal.user.is_superuser is False:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            detail="You are not authorized to edit this meal",
+        )
 
     if "ingredients" in update_data:
         db_meal.ingredients = []
