@@ -27,7 +27,6 @@ def test_signup(client, test_db, monkeypatch):
         "/api/signup",
         data={"username": "some@email.com", "password": "randompassword"},
     )
-    print(response.content)
     assert response.status_code == 200
 
 
