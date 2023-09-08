@@ -1,6 +1,8 @@
 # meal-plan
 Meal planning service leveraging ChatGPT API
 
+Used https://github.com/Buuntu/fastapi-react as a template
+
 ## Features
 
 - **FastAPI** with Python 3.11
