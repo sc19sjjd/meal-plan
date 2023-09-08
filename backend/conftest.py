@@ -239,3 +239,32 @@ def test_ingredients(test_db) -> t.List[models.Ingredient]:
     test_db.add(ingredients[1])
     test_db.commit()
     return ingredients
+
+
+@pytest.fixture
+def test_meals(test_db, test_ingredients, test_user) -> t.List[models.Meal]:
+    """
+    Make 2 test meals in the database
+    """
+    meals = []
+    meals.append(
+        models.Meal(
+            name="Test Meal",
+            description="Test Description",
+        )
+    )
+    meals[0].ingredients.append(test_ingredients[0])
+    meals[0].ingredients.append(test_ingredients[1])
+    meals.append(
+        models.Meal(
+            name="Test Meal 2",
+            description="Test Description 2",
+        )
+    )
+    meals[1].ingredients.append(test_ingredients[0])
+    test_db.add(meals[0])
+    test_db.add(meals[1])
+    test_user.meals.append(meals[0])
+    test_user.meals.append(meals[1])
+    test_db.commit()
+    return meals

@@ -30,8 +30,6 @@ async def meals_list(
     else:
         meals = get_all_meals(db, user_id=current_user.id)
 
-    meals = [object_as_dict(meal) for meal in meals]
-
     # This is necessary for react-admin to work
     response.headers["Content-Range"] = f"0-9/{len(meals)}"
     return meals
@@ -78,6 +76,7 @@ async def meal_create(
 )
 async def meal_edit(
     request: Request,
+    meal_id: int,
     meal_edit: MealEdit,
     db=Depends(get_db),
     current_user=Depends(get_current_active_user),
@@ -85,7 +84,7 @@ async def meal_edit(
     """
     Edit meal
     """
-    return edit_meal(db, meal_edit, meal_edit.id, current_user.id)
+    return edit_meal(db, meal_id, meal_edit, current_user.id)
 
 
 @r.delete(

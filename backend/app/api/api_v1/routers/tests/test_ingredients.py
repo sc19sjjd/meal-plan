@@ -90,7 +90,10 @@ def test_create_ingredient_duplicate(
         json=new_ingredient,
         headers=superuser_token_headers,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "Ingredient with this name already exists"
+    }
 
 
 def test_edit_ingredient(client, test_ingredients, superuser_token_headers):
@@ -138,7 +141,10 @@ def test_edit_ingredient_duplicate(
         json=new_ingredient,
         headers=superuser_token_headers,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "Ingredient with this name already exists"
+    }
 
 
 def test_delete_ingredient(
@@ -192,4 +198,8 @@ def test_unauthorized_routes(client, user_token_headers):
         headers=user_token_headers,
     )
     assert response.status_code == 403
-    response = client.delete
+    response = client.delete(
+        "/api/v1/ingredients/1",
+        headers=user_token_headers,
+    )
+    assert response.status_code == 403

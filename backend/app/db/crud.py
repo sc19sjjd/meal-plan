@@ -212,7 +212,7 @@ def create_ingredient(
 ) -> schemas.Ingredient:
     if get_ingredient_by_name(db, ingredient.name):
         raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_409_CONFLICT,
             detail="Ingredient with this name already exists",
         )
 
@@ -249,7 +249,7 @@ def edit_ingredient(
 
     if "name" in update_data and get_ingredient_by_name(db, ingredient.name):
         raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_409_CONFLICT,
             detail="Ingredient with this name already exists",
         )
 
@@ -267,6 +267,10 @@ def get_meal(db: Session, meal_id: int) -> schemas.Meal:
     if not meal:
         raise HTTPException(status_code=404, detail="Meal not found")
     return meal
+
+
+def get_meal_by_name(db: Session, name: str) -> schemas.Meal:
+    return db.query(models.Meal).filter(models.Meal.name == name).first()
 
 
 def get_all_meals(
@@ -311,20 +315,24 @@ def get_meals_like_name(
 def create_meal(
     db: Session, meal: schemas.MealCreate, user_id: int
 ) -> schemas.Meal:
-    db_user = get_user(db, user_id)
+    if get_meal_by_name(db, meal.name):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail="Meal with this name already exists",
+        )
 
     db_meal = models.Meal(
         name=meal.name,
         description=meal.description,
     )
     db.add(db_meal)
+
+    db_user = get_user(db, user_id)
     db_user.meals.append(db_meal)
-    db.commit()
 
     for ingredient_id in meal.ingredients:
-        db_ingredient = db.query(models.Ingredient).get(ingredient_id)
-        if db_ingredient is not None:
-            db_meal.ingredients.append(db_ingredient)
+        db_ingredient = get_ingredient(db, ingredient_id)
+        db_meal.ingredients.append(db_ingredient)
 
     db.commit()
     db.refresh(db_meal)
@@ -361,14 +369,19 @@ def edit_meal(
             detail="You are not authorized to edit this meal",
         )
 
+    if "name" in update_data and get_meal_by_name(db, meal.name):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail="Meal with this name already exists",
+        )
+
     if "ingredients" in update_data:
         db_meal.ingredients = []
 
         # pop ingredients to remove them from update_data
         for ingredient_id in update_data.pop("ingredients"):
-            db_ingredient = db.query(models.Ingredient).get(ingredient_id)
-            if db_ingredient is not None:
-                db_meal.ingredients.append(db_ingredient)
+            db_ingredient = get_ingredient(db, ingredient_id)
+            db_meal.ingredients.append(db_ingredient)
 
     for key, value in update_data.items():
         setattr(db_meal, key, value)
