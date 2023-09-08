@@ -4,6 +4,12 @@ from app.db import models
 def test_get_user_diet_requirements(
     client, test_db, test_user, superuser_token_headers
 ):
+    db_diet_requirements = (
+        test_db.query(models.UserDietRequirements)
+        .filter(models.UserDietRequirements.user_id == test_user.id)
+        .first()
+    )
+    print(db_diet_requirements)
     response = client.get(
         f"/api/v1/users_diet_requirements/{test_user.id}",
         headers=superuser_token_headers,

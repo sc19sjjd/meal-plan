@@ -1,6 +1,7 @@
 from app.core import security
 from app.core.auth import get_current_active_superuser, get_current_active_user
-from app.db.crud import edit_user_diet_requirements, get_user_diet_requirements
+from app.db.crud import (edit_user_diet_requirements,
+                         get_user_diet_requirements, object_as_dict)
 from app.db.schemas import UserDietRequirements, UserDietRequirementsEdit
 from app.db.session import get_db
 from fastapi import APIRouter, Depends, Request
@@ -21,6 +22,7 @@ async def user_diet_requirements_me(
     Get current user diet requirements
     """
     diet_requirements = get_user_diet_requirements(db, current_user.id)
+    diet_requirements = object_as_dict(diet_requirements)
     return diet_requirements
 
 
@@ -39,6 +41,7 @@ async def user_diet_requirements_by_id(
     Get any user diet requirements by user id
     """
     diet_requirements = get_user_diet_requirements(db, user_id)
+    diet_requirements = object_as_dict(diet_requirements)
     return diet_requirements
 
 

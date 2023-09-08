@@ -3,9 +3,16 @@ import typing as t
 from app.core.security import get_password_hash
 from email_validator import EmailNotValidError, validate_email
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, class_mapper
 
 from . import models, schemas
+
+
+def object_as_dict(obj):
+    """Converts an ORM object to a dictionary."""
+    return {
+        c.key: getattr(obj, c.key) for c in class_mapper(obj.__class__).columns
+    }
 
 
 def check_valid_email(email: str) -> str:
@@ -101,10 +108,24 @@ def get_user_diet_requirements(
     db: Session, user_id: int
 ) -> schemas.UserDietRequirements:
     db_user = get_user(db, user_id)
+    print(db_user)
     if not db_user:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")
 
     return db_user.diet_requirements
+
+
+# def get_user_diet_requirements(
+#     db: Session, user_id: int
+# ) -> schemas.UserDietRequirements:
+#     print(f"Fetching diet requirements for user_id: {user_id}")
+#     try:
+#         result = db.query(models.UserDietRequirements).filter(models.UserDietRequirements.user_id == user_id).first()
+#         print(f"Query result: {result}")
+#         return result
+#     except Exception as e:
+#         print(f"Error occurred: {e}")
+#         return None
 
 
 def create_user_diet_requirements(
@@ -182,7 +203,9 @@ def get_ingredients(
     return db.query(models.Ingredient).offset(skip).limit(limit).all()
 
 
-def get_ingredients_like_name(db: Session, name: str, skip: int = 0, limit: int = 100) -> t.List[schemas.Ingredient]:
+def get_ingredients_like_name(
+    db: Session, name: str, skip: int = 0, limit: int = 100
+) -> t.List[schemas.Ingredient]:
     return (
         db.query(models.Ingredient)
         .filter(models.Ingredient.name.like(f"%{name}%"))

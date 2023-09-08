@@ -26,15 +26,18 @@ def test_db():
     """
     # Connect to the test database
     test_engine = create_engine(
-        get_test_db_url(), 
+        get_test_db_url(),
+        echo=False,
         # connect_args={"check_same_thread": False}
     )
 
     Base.metadata.create_all(bind=test_engine)
-    session_factory = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+    session_factory = sessionmaker(
+        autocommit=False, autoflush=False, bind=test_engine
+    )
     SessionLocal = session_factory
     session = SessionLocal()
-    
+
     yield session  # this is where the test function will execute
 
     # Teardown: rollback any changes made during the test and close the session
@@ -147,12 +150,6 @@ def test_user(test_db) -> models.User:
     """
     Make a test user in the database
     """
-
-    # print(test_db._nested_transaction)
-    # print("before user")
-
-    #savepoint = test_db.begin_nested()
-
     user = models.User(
         email="fake@email.com",
         hashed_password=get_password_hash(),
@@ -164,15 +161,10 @@ def test_user(test_db) -> models.User:
         user_id=user.id,
     )
     test_db.add(user_diet_requirements)
-    # print("before commit")
+    user.diet_requirements = user_diet_requirements
     test_db.commit()
-    # print("after commit")
-
-    # print(test_db._nested_transaction)
-    # print("after user")
 
     return user
-    #savepoint.rollback()
 
 
 @pytest.fixture
@@ -180,8 +172,6 @@ def test_superuser(test_db) -> models.User:
     """
     Superuser for testing
     """
-    # savepoint = test_db.begin_nested()
-
     user = models.User(
         email="fakeadmin@email.com",
         hashed_password=get_password_hash(),
@@ -189,16 +179,14 @@ def test_superuser(test_db) -> models.User:
         is_verified=True,
     )
     test_db.add(user)
-    #test_db.commit()
     user_diet_requirements = models.UserDietRequirements(
         user_id=user.id,
     )
     test_db.add(user_diet_requirements)
+    user.diet_requirements = user_diet_requirements
     test_db.commit()
-    
-    return user
 
-    # savepoint.rollback()
+    return user
 
 
 def verify_password_mock(first: str, second: str) -> bool:
@@ -245,12 +233,8 @@ def test_ingredients(test_db) -> t.List[models.Ingredient]:
     Make 2 test ingredients in the database
     """
     ingredients = []
-    ingredients.append(
-        models.Ingredient(name="Test Ingredient")
-    )
-    ingredients.append(
-        models.Ingredient(name="Test Ingredient 2")
-    )
+    ingredients.append(models.Ingredient(name="Test Ingredient"))
+    ingredients.append(models.Ingredient(name="Test Ingredient 2"))
     test_db.add(ingredients[0])
     test_db.add(ingredients[1])
     test_db.commit()
