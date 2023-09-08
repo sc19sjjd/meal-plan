@@ -58,12 +58,16 @@ def create_user(db: Session, user: schemas.UserCreate):
         hashed_password=hashed_password,
     )
     db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
 
     # corresponding user's diet requirements (default to all false)
     diet_requirements = schemas.UserDietRequirementsCreate()
-    create_user_diet_requirements(db, db_user.id, diet_requirements)
+    db_diet_requirements = create_user_diet_requirements(
+        db, db_user.id, diet_requirements
+    )
+    db_user.diet_requirements = db_diet_requirements
+
+    db.commit()
+    db.refresh(db_user)
     return db_user
 
 
