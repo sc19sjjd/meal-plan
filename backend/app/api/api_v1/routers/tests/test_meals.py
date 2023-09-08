@@ -148,6 +148,26 @@ def test_create_meal_duplicate(
     assert response.json() == {"detail": "Meal with this name already exists"}
 
 
+def test_create_meal_invalid_ingredient(
+    client, test_ingredients, user_token_headers
+):
+    new_meal = {
+        "name": "New Meal",
+        "description": "New Description",
+        "ingredients": [
+            1234,
+        ],
+    }
+
+    response = client.post(
+        "/api/v1/meals",
+        json=new_meal,
+        headers=user_token_headers,
+    )
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Ingredient not found"}
+
+
 def test_edit_meal(
     client, test_user, test_meals, test_ingredients, user_token_headers
 ):
@@ -193,9 +213,7 @@ def test_edit_meal_not_found(client, user_token_headers):
     assert response.status_code == 404
 
 
-def test_edit_meal_duplicate(
-    client, test_meals, test_ingredients, user_token_headers
-):
+def test_edit_meal_duplicate(client, test_meals, user_token_headers):
     new_meal = {
         "name": test_meals[1].name,
         "description": "New Description",
@@ -208,6 +226,41 @@ def test_edit_meal_duplicate(
     )
     assert response.status_code == 409
     assert response.json() == {"detail": "Meal with this name already exists"}
+
+
+def test_edit_meal_invalid_ingredient(client, test_meals, user_token_headers):
+    new_meal = {
+        "name": "New Meal",
+        "description": "New Description",
+        "ingredients": [
+            1234,
+        ],
+    }
+
+    response = client.put(
+        f"/api/v1/meals/{test_meals[0].id}",
+        json=new_meal,
+        headers=user_token_headers,
+    )
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Ingredient not found"}
+
+
+def test_edit_meal_unowned(client, test_meals, user_token_headers):
+    new_meal = {
+        "name": "New Meal",
+        "description": "New Description",
+    }
+
+    response = client.put(
+        f"/api/v1/meals/{test_meals[2].id}",
+        json=new_meal,
+        headers=user_token_headers,
+    )
+    assert response.status_code == 401
+    assert response.json() == {
+        "detail": "You are not authorized to edit this meal"
+    }
 
 
 def test_delete_meal(client, test_meals, user_token_headers):
@@ -240,6 +293,17 @@ def test_delete_meal_not_found(client, test_meals, user_token_headers):
         headers=user_token_headers,
     )
     assert response.status_code == 404
+
+
+def test_delete_meal_unowned(client, test_meals, user_token_headers):
+    response = client.delete(
+        f"/api/v1/meals/{test_meals[2].id}",
+        headers=user_token_headers,
+    )
+    assert response.status_code == 401
+    assert response.json() == {
+        "detail": "You are not authorized to delete this meal"
+    }
 
 
 def test_unauthenticated_routes(client):

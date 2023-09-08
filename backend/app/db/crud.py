@@ -324,6 +324,7 @@ def create_meal(
     db_meal = models.Meal(
         name=meal.name,
         description=meal.description,
+        user_id=user_id,
     )
     db.add(db_meal)
 
@@ -331,7 +332,12 @@ def create_meal(
     db_user.meals.append(db_meal)
 
     for ingredient_id in meal.ingredients:
-        db_ingredient = get_ingredient(db, ingredient_id)
+        try:
+            db_ingredient = get_ingredient(db, ingredient_id)
+        except HTTPException:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, detail="Ingredient not found"
+            )
         db_meal.ingredients.append(db_ingredient)
 
     db.commit()
@@ -344,7 +350,8 @@ def delete_meal(db: Session, meal_id: int, user_id: int) -> schemas.Meal:
     if not meal:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Meal not found")
 
-    if user_id != meal.user_id and meal.user.is_superuser is False:
+    user = get_user(db, user_id)
+    if user_id != meal.user_id and user.is_superuser is False:
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
             detail="You are not authorized to delete this meal",
@@ -363,7 +370,8 @@ def edit_meal(
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Meal not found")
     update_data = meal.dict(exclude_unset=True)
 
-    if user_id != db_meal.user_id and db_meal.user.is_superuser is False:
+    user = get_user(db, user_id)
+    if user_id != db_meal.user_id and user.is_superuser is False:
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
             detail="You are not authorized to edit this meal",
@@ -380,7 +388,12 @@ def edit_meal(
 
         # pop ingredients to remove them from update_data
         for ingredient_id in update_data.pop("ingredients"):
-            db_ingredient = get_ingredient(db, ingredient_id)
+            try:
+                db_ingredient = get_ingredient(db, ingredient_id)
+            except HTTPException:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST, detail="Ingredient not found"
+                )
             db_meal.ingredients.append(db_ingredient)
 
     for key, value in update_data.items():
