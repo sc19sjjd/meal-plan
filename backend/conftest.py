@@ -46,56 +46,6 @@ def test_db():
     Base.metadata.drop_all(bind=test_engine)
 
 
-# @pytest.fixture()
-# def test_db():
-#     """
-#     Modify the db session to automatically roll back after each test.
-#     This is to avoid tests affecting the database state of other tests.
-#     """
-#     # Connect to the test database
-#     engine = create_engine(
-#         get_test_db_url(),
-#         echo=True,
-#     )
-
-#     connection = engine.connect()
-#     trans = connection.begin()
-
-#     # Run a parent transaction that can roll back all changes
-#     test_session_maker = sessionmaker(
-#         autocommit=False, autoflush=False, bind=engine
-#     )
-#     test_session = test_session_maker()
-#     savepoint = test_session.begin_nested()
-#     test_session.expire_all()
-#     # print("begin nested")
-
-#     @event.listens_for(test_session, "after_transaction_end")
-#     def restart_savepoint(s, transaction):
-#         if transaction.nested and not transaction._parent.nested:
-#             s.expire_all()
-#             s.begin_nested()
-#             # print("new transaction")
-
-#     # print(test_session._nested_transaction)
-#     # print("before yield")
-
-#     yield test_session
-
-#     print("rollback")
-#     # print(test_session._nested_transaction)
-#     # print("before rollback")
-#     # Roll back the parent transaction after the test is complete
-#     #savepoint.rollback()
-#     test_session.rollback()
-#     test_session.close()
-#     trans.rollback()
-#     trans.close()
-#     connection.close()
-#     # print(test_session._nested_transaction)
-#     # print("after rollback")
-
-
 @pytest.fixture(scope="session", autouse=True)
 def create_test_db():
     """
