@@ -44,6 +44,19 @@ def test_resignup(client, test_user, monkeypatch):
     assert response.status_code == 409
 
 
+def test_signup_invalid_email(client, test_db, monkeypatch):
+    def get_password_hash_mock(first: str, second: str):
+        return True
+
+    monkeypatch.setattr(security, "get_password_hash", get_password_hash_mock)
+
+    response = client.post(
+        "/api/signup",
+        data={"username": "@email.com", "password": "randompassword"},
+    )
+    assert response.status_code == 400
+
+
 def test_wrong_password(client, test_db, test_user, test_password, monkeypatch):
     def verify_password_failed_mock(first: str, second: str):
         return False
