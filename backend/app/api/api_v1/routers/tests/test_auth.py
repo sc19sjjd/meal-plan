@@ -56,6 +56,18 @@ def test_signup_invalid_email(client, test_db, monkeypatch):
     )
     assert response.status_code == 400
 
+    response = client.post (
+        "/api/signup",
+        data={"username": "email.com", "password": "randompassword"},
+    )
+    assert response.status_code == 400
+
+    response = client.post(
+        "/api/signup",
+        data={"username": "email@emailcom", "password": "randompassword"},
+    )
+    assert response.status_code == 400
+
 
 def test_wrong_password(client, test_db, test_user, test_password, monkeypatch):
     def verify_password_failed_mock(first: str, second: str):
